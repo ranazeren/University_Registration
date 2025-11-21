@@ -1,30 +1,48 @@
 package edu.university.registration.model.course;
 
 import edu.university.registration.model.enrollment.Enrollment;
-import edu.university.registration.model.person.Person;
+import edu.university.registration.model.person.Instructor;
 import edu.university.registration.model.person.Student;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Section {
     private final String id;
     private final Course course;
     private final String term;
-    private Person instructor;
+    private Instructor instructor;
     private int capacity;
-    private  List<TimeSlot> meetingTimes = new ArrayList<>();
-    private  List<Enrollment> roster = new ArrayList<>();
+    private final List<TimeSlot> meetingTimes;
+    private final List<Enrollment> roster = new ArrayList<>();
 
-    public Section(String id, Course course, String term, Person instructor, int capacity, List<TimeSlot> meetingTimes) {
+    public Section(String id,
+                   Course course,
+                   String term,
+                   Instructor instructor,
+                   int capacity,
+                   List<TimeSlot> meetingTimes) {
 
-        if (id == null) throw new IllegalArgumentException();
-        if (course == null) throw new IllegalArgumentException();
-        if (term == null) throw new IllegalArgumentException();
-        if (capacity < 0) throw new IllegalArgumentException();
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("Section id cannot be null or blank");
+        }
+        if (course == null) {
+            throw new IllegalArgumentException("Course cannot be null");
+        }
+        if (term == null || term.isBlank()) {
+            throw new IllegalArgumentException("Term cannot be null or blank");
+        }
+        if (capacity < 0) {
+            throw new IllegalArgumentException("Capacity cannot be negative");
+        }
         if (meetingTimes == null || meetingTimes.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Meeting times cannot be null or empty");
+        }
+        for (TimeSlot ts : meetingTimes) {
+            if (ts == null) {
+                throw new IllegalArgumentException("Meeting time cannot contain null elements");
+            }
         }
 
         this.id = id;
@@ -32,27 +50,31 @@ public class Section {
         this.term = term;
         this.instructor = instructor;
         this.capacity = capacity;
-
-        for (TimeSlot ts : meetingTimes) {
-            if (ts == null) throw new IllegalArgumentException();
-        }
         this.meetingTimes = new ArrayList<>(meetingTimes);
     }
 
     public String getId() { return id; }
     public Course getCourse() { return course; }
     public String getTerm() { return term; }
-    public Person getInstructor() { return instructor; }
+    public Instructor getInstructor() { return instructor; }
     public int getCapacity() { return capacity; }
-    public List<TimeSlot> getMeetingTimes() { return meetingTimes; }
-    public List<Enrollment> getRoster() { return roster; }
 
-    public void setInstructor(Person instructor) {
+    public List<TimeSlot> getMeetingTimes() {
+        return List.copyOf(meetingTimes);
+    }
+
+    public List<Enrollment> getRoster() {
+        return List.copyOf(roster);
+    }
+
+    public void setInstructor(Instructor instructor) {
         this.instructor = instructor;
     }
 
     public void setCapacity(int capacity) {
-        if (capacity < 0) throw new IllegalArgumentException();
+        if (capacity < 0) {
+            throw new IllegalArgumentException("Capacity cannot be negative");
+        }
         this.capacity = capacity;
     }
 
@@ -60,11 +82,11 @@ public class Section {
         return roster.size() >= capacity;
     }
 
-
     public boolean addStudent(Student student) {
-        if (student == null) throw new IllegalArgumentException();
+        if (student == null) {
+            throw new IllegalArgumentException("Student cannot be null");
+        }
         if (isFull()) return false;
-
 
         for (Enrollment e : roster) {
             if (e.getStudent().equals(student)) {
@@ -77,27 +99,19 @@ public class Section {
         return true;
     }
 
-
     public boolean removeStudent(Student student) {
-        if (student == null) return false;
-
+        if (student == null) {
+            return false;
+        }
         return roster.removeIf(e -> e.getStudent().equals(student));
     }
 
     public boolean conflictsWith(Section other) {
-
+        Objects.requireNonNull(other, "Other section cannot be null");
         for (TimeSlot t1 : this.meetingTimes) {
             for (TimeSlot t2 : other.meetingTimes) {
-                if (t1.getDayOfWeek() == t2.getDayOfWeek()) {
-                    LocalTime aStart = t1.getStart();
-                    LocalTime aEnd   = t1.getEnd();
-                    LocalTime bStart = t2.getStart();
-                    LocalTime bEnd   = t2.getEnd();
-
-
-                    if (aStart.isBefore(bEnd) && bStart.isBefore(aEnd)) {
-                        return true;
-                    }
+                if (t1.overlaps(t2)) {
+                    return true;
                 }
             }
         }

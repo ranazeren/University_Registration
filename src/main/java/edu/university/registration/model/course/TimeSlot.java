@@ -25,8 +25,8 @@ public final class TimeSlot implements Comparable<TimeSlot> {
     public LocalTime getEnd() { return end; }
     public String getRoom() { return room; }
 
-
     public boolean overlaps(TimeSlot other) {
+        Objects.requireNonNull(other, "other");
         if (this.dayOfWeek != other.dayOfWeek) return false;
         return this.start.isBefore(other.end) && other.start.isBefore(this.end);
     }
