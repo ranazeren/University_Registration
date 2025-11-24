@@ -5,7 +5,6 @@ import edu.university.registration.model.course.Section;
 import edu.university.registration.model.course.TimeSlot;
 import edu.university.registration.model.enrollment.Grade;
 import edu.university.registration.model.person.Student;
-import edu.university.registration.model.transcript.TranscriptEntry;
 import edu.university.registration.repository.Repository;
 import edu.university.registration.service.registration.RegistrationServiceImpl;
 import edu.university.registration.service.validation.CapacityValidator;

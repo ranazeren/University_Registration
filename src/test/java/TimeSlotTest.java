@@ -1,4 +1,4 @@
-// src/test/java/edu/university/registration/model/course/TimeSlotTest.java
+
 
 
 import edu.university.registration.model.course.TimeSlot;

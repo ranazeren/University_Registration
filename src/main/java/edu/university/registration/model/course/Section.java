@@ -78,8 +78,26 @@ public class Section {
         this.capacity = capacity;
     }
 
+
+    public void setMeetingTimes(List<TimeSlot> newTimes) {
+        if (newTimes == null || newTimes.isEmpty()) {
+            throw new IllegalArgumentException("Meeting times cannot be null or empty");
+        }
+        meetingTimes.clear();
+        for (TimeSlot ts : newTimes) {
+            if (ts == null) {
+                throw new IllegalArgumentException("Meeting times cannot contain null elements");
+            }
+            meetingTimes.add(ts);
+        }
+    }
+
+
     public boolean isFull() {
-        return roster.size() >= capacity;
+        long enrolledCount = roster.stream()
+                .filter(e -> e.getStatus() == Enrollment.Status.ENROLLED)
+                .count();
+        return enrolledCount >= capacity;
     }
 
     public boolean addStudent(Student student) {
@@ -89,7 +107,8 @@ public class Section {
         if (isFull()) return false;
 
         for (Enrollment e : roster) {
-            if (e.getStudent().equals(student)) {
+            if (e.getStudent().equals(student) &&
+                    e.getStatus() == Enrollment.Status.ENROLLED) {
                 return false;
             }
         }
@@ -99,11 +118,25 @@ public class Section {
         return true;
     }
 
+
     public boolean removeStudent(Student student) {
         if (student == null) {
             return false;
         }
         return roster.removeIf(e -> e.getStudent().equals(student));
+    }
+
+    public boolean dropStudent(Student student) {
+        if (student == null) {
+            return false;
+        }
+        for (Enrollment e : roster) {
+            if (e.getStudent().equals(student)) {
+                e.setStatus(Enrollment.Status.DROPPED);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean conflictsWith(Section other) {

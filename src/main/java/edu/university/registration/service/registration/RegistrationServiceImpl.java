@@ -42,32 +42,29 @@ public class RegistrationServiceImpl implements RegistrationService {
             return false;
         }
 
-
         if (!prerequisiteValidator.hasCompletedPrerequisites(student, section.getCourse())) {
             return false;
         }
 
-
         List<Section> currentSchedule = listSchedule(studentId, section.getTerm());
-
 
         if (scheduleConflictChecker.hasConflict(currentSchedule, section)) {
             return false;
         }
 
-
         if (!capacityValidator.hasCapacity(section)) {
             return false;
         }
-
 
         boolean added = section.addStudent(student);
         if (!added) {
             return false;
         }
 
+        student.addCurrentRegistration(sectionId);
 
         sectionRepository.save(section);
+        studentRepository.save(student);
         return true;
     }
 
@@ -82,20 +79,12 @@ public class RegistrationServiceImpl implements RegistrationService {
             return false;
         }
 
-        List<Enrollment> roster = section.getRoster();
-        boolean removed = false;
-
-        for (int i = 0; i < roster.size(); i++) {
-            Enrollment e = roster.get(i);
-            if (e.getStudent().getId().equals(studentId)) {
-                roster.remove(i);
-                removed = true;
-                break;
-            }
-        }
+        boolean removed = section.dropStudent(student);
 
         if (removed) {
+            student.removeCurrentRegistration(sectionId);
             sectionRepository.save(section);
+            studentRepository.save(student);
         }
 
         return removed;
@@ -115,7 +104,8 @@ public class RegistrationServiceImpl implements RegistrationService {
 
             List<Enrollment> roster = section.getRoster();
             for (Enrollment e : roster) {
-                if (e.getStudent().getId().equals(studentId)) {
+                if (e.getStudent().getId().equals(studentId)
+                        && e.getStatus() == Enrollment.Status.ENROLLED) {
                     result.add(section);
                     break;
                 }
